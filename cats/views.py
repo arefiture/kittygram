@@ -17,3 +17,24 @@ def cat_list(request):
     cats = Cat.objects.all()
     serializer = CatSerializer(cats, many=True)
     return Response(serializer.data)
+
+
+@api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
+def cat_detail(request, pk):
+    cat = Cat.objects.get(pk=pk)
+    if request.method == 'PUT':
+        serializer = CatSerializer(cat, data=request.data)
+    elif request.method == 'PATCH':
+        serializer = CatSerializer(cat, data=request.data, partial=True)
+
+    if request.method in ('PUT', 'PATCH'):
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'DELETE':
+        if cat.delete():
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer = CatSerializer(cat)
+    return Response(serializer.data, status=status.HTTP_200_OK)
